@@ -21,7 +21,7 @@ jobs:
           west update
 
       - name: Build firmware
-        working-directory: example-application
+        working-directory: nrf-playground
         run: |
           west build -b custom_plank app
 
