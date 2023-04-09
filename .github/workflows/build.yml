@@ -1,6 +1,6 @@
 name: Build
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build:
@@ -20,15 +20,31 @@ jobs:
           west init -l .
           west update
 
+      - name: Build MCUboot
+        working-directory: .
+        run: |
+          west build -b nrf52840dk_nrf52840 -d build_mcuboot bootloader/mcuboot/boot/zephyr
+
       - name: Build firmware
         working-directory: nrf-playground
         run: |
           west build app
 
+      - name: Sign firmware image
+        working-directory: nrf-playground
+        run: |
+          west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
+
       - name: Twister Tests
         working-directory: nrf-playground
         run: |
           ../zephyr/scripts/twister -G --board-root boards/ --testsuite-root ./tests/
+
+      - name: Archive MCUboot
+        uses: actions/upload-artifact@v2
+        with:
+          name: mcuboot
+          path: build_mcuboot/zephyr/zephyr.*
 
       - name: Archive firmware
         uses: actions/upload-artifact@v2
